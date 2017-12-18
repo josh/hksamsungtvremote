@@ -139,8 +139,18 @@ func power(ip string) error {
 		return err
 	}
 
-	msg := "{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"KEY_POWER\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}"
-	if err := c.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
+	if err := c.WriteJSON(&struct {
+		Method string                 `json:"method"`
+		Params map[string]interface{} `json:"params"`
+	}{
+		Method: "ms.remote.control",
+		Params: map[string]interface{}{
+			"Cmd":          "Click",
+			"DataOfCmd":    "KEY_POWER",
+			"Option":       "false",
+			"TypeOfRemote": "SendRemoteKey",
+		},
+	}); err != nil {
 		return err
 	}
 
