@@ -52,14 +52,12 @@ func main() {
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			err := wol(*mac)
-			if err != nil {
+			if err := wol(*mac); err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
 			log.Info.Println("Turn off")
-			err := power(*ip)
-			if err != nil {
+			if err := power(*ip); err != nil {
 				log.Debug.Println(err)
 			}
 		}
@@ -82,9 +80,8 @@ func main() {
 func state(ip string) bool {
 	client := &http.Client{Timeout: 500 * time.Millisecond}
 	url := fmt.Sprintf("http://%s:8001/", ip)
-	_, err := client.Get(url)
 
-	if err != nil {
+	if _, err := client.Get(url); err != nil {
 		return false
 	}
 
@@ -130,21 +127,18 @@ func power(ip string) error {
 	}
 	defer c.Close()
 
-	_, _, err = c.ReadMessage()
-	if err != nil {
+	if _, _, err := c.ReadMessage(); err != nil {
 		return err
 	}
 
 	msg := "{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"KEY_POWER\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}"
-	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
-	if err != nil {
+	if err := c.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		return err
 	}
 
 	time.Sleep(750 * time.Millisecond)
 
-	err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-	if err != nil {
+	if err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
 		return err
 	}
 
