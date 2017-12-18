@@ -117,7 +117,7 @@ func wol(macAddr string) error {
 	}
 
 	written, err := c.Write(b)
-	c.Close()
+	defer c.Close()
 
 	if written != 102 {
 		return err
