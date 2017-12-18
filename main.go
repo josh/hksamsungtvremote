@@ -31,6 +31,14 @@ func main() {
 		log.Debug.Enable()
 	}
 
+	if *ip == "" {
+		log.Info.Fatal("missing -ip")
+	}
+
+	if *mac == "" {
+		log.Info.Fatal("missing -mac")
+	}
+
 	info := accessory.Info{
 		Name:         "Samsung TV Remote",
 		Manufacturer: "Samsung",
