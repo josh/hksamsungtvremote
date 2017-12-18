@@ -89,7 +89,7 @@ func state(ip string) bool {
 }
 
 func wol(macAddr string) error {
-	macBytes, err := hex.DecodeString(strings.Join(strings.Split(macAddr, ":"), ""))
+	macBytes, err := hex.DecodeString(strings.Replace(macAddr, ":", "", -1))
 	if err != nil {
 		return err
 	}
