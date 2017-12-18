@@ -4,15 +4,16 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"github.com/brutella/hc"
-	"github.com/brutella/hc/accessory"
-	"github.com/brutella/hc/log"
-	"github.com/gorilla/websocket"
 	"net"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/brutella/hc"
+	"github.com/brutella/hc/accessory"
+	"github.com/brutella/hc/log"
+	"github.com/gorilla/websocket"
 )
 
 func main() {
