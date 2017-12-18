@@ -89,9 +89,9 @@ func state(ip string) bool {
 
 	if err != nil {
 		return false
-	} else {
-		return true
 	}
+
+	return true
 }
 
 func wol(macAddr string) error {
