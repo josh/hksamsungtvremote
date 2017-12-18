@@ -16,21 +16,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func main() {
-	var db string
-	var ip string
-	var mac string
-	var pin string
-	var verbose bool
+var (
+	db      = flag.String("db", "/usr/local/var/db/hksamsungtvremote", "Database path")
+	ip      = flag.String("ip", "", "TV IP address")
+	mac     = flag.String("mac", "", "TV MAC address")
+	pin     = flag.String("pin", "83688190", "HomeKit Accessory PIN code")
+	verbose = flag.Bool("v", false, "Enable verbose debug logging")
+)
 
-	flag.StringVar(&ip, "ip", "", "TV IP address")
-	flag.StringVar(&mac, "mac", "", "TV MAC address")
-	flag.StringVar(&pin, "pin", "83688190", "HomeKit Accessory PIN code")
-	flag.StringVar(&db, "db", "/usr/local/var/db/hksamsungtvremote", "Database path")
-	flag.BoolVar(&verbose, "v", false, "Enable verbose debug logging")
+func main() {
 	flag.Parse()
 
-	if verbose == true {
+	if *verbose == true {
 		log.Debug.Enable()
 	}
 
@@ -43,33 +40,33 @@ func main() {
 	acc := accessory.NewSwitch(info)
 
 	acc.Switch.On.OnValueRemoteGet(func() bool {
-		return state(ip)
+		return state(*ip)
 	})
 
 	go func() {
 		for {
 			time.Sleep(1 * time.Minute)
-			acc.Switch.On.SetValue(state(ip))
+			acc.Switch.On.SetValue(state(*ip))
 		}
 	}()
 
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			err := wol(mac)
+			err := wol(*mac)
 			if err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
 			log.Info.Println("Turn off")
-			err := power(ip)
+			err := power(*ip)
 			if err != nil {
 				log.Debug.Println(err)
 			}
 		}
 	})
 
-	config := hc.Config{Pin: pin, StoragePath: db}
+	config := hc.Config{Pin: *pin, StoragePath: *db}
 	t, err := hc.NewIPTransport(config, acc.Accessory)
 	if err != nil {
 		log.Info.Panic(err)
