@@ -16,21 +16,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func main() {
-	var db string
-	var ip string
-	var mac string
-	var pin string
-	var verbose bool
+var (
+	db      = flag.String("db", "/usr/local/var/db/hksamsungtvremote", "Database path")
+	ip      = flag.String("ip", "", "TV IP address")
+	mac     = flag.String("mac", "", "TV MAC address")
+	pin     = flag.String("pin", "83688190", "HomeKit Accessory PIN code")
+	verbose = flag.Bool("v", false, "Enable verbose debug logging")
+)
 
-	flag.StringVar(&ip, "ip", "", "TV IP address")
-	flag.StringVar(&mac, "mac", "", "TV MAC address")
-	flag.StringVar(&pin, "pin", "83688190", "HomeKit Accessory PIN code")
-	flag.StringVar(&db, "db", "/usr/local/var/db/hksamsungtvremote", "Database path")
-	flag.BoolVar(&verbose, "v", false, "Enable verbose debug logging")
+func main() {
 	flag.Parse()
 
-	if verbose == true {
+	if *verbose == true {
 		log.Debug.Enable()
 	}
 
@@ -43,33 +40,30 @@ func main() {
 	acc := accessory.NewSwitch(info)
 
 	acc.Switch.On.OnValueRemoteGet(func() bool {
-		return state(ip)
+		return state(*ip)
 	})
 
 	go func() {
-		for {
-			time.Sleep(1 * time.Minute)
-			acc.Switch.On.SetValue(state(ip))
+		for _ = range time.NewTicker(1 * time.Minute).C {
+			acc.Switch.On.SetValue(state(*ip))
 		}
 	}()
 
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			err := wol(mac)
-			if err != nil {
+			if err := wol(*mac); err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
 			log.Info.Println("Turn off")
-			err := power(ip)
-			if err != nil {
+			if err := power(*ip); err != nil {
 				log.Debug.Println(err)
 			}
 		}
 	})
 
-	config := hc.Config{Pin: pin, StoragePath: db}
+	config := hc.Config{Pin: *pin, StoragePath: *db}
 	t, err := hc.NewIPTransport(config, acc.Accessory)
 	if err != nil {
 		log.Info.Panic(err)
@@ -86,9 +80,8 @@ func main() {
 func state(ip string) bool {
 	client := &http.Client{Timeout: 500 * time.Millisecond}
 	url := fmt.Sprintf("http://%s:8001/", ip)
-	_, err := client.Get(url)
 
-	if err != nil {
+	if _, err := client.Get(url); err != nil {
 		return false
 	}
 
@@ -96,7 +89,7 @@ func state(ip string) bool {
 }
 
 func wol(macAddr string) error {
-	macBytes, err := hex.DecodeString(strings.Join(strings.Split(macAddr, ":"), ""))
+	macBytes, err := hex.DecodeString(strings.Replace(macAddr, ":", "", -1))
 	if err != nil {
 		return err
 	}
@@ -134,21 +127,18 @@ func power(ip string) error {
 	}
 	defer c.Close()
 
-	_, _, err = c.ReadMessage()
-	if err != nil {
+	if _, _, err := c.ReadMessage(); err != nil {
 		return err
 	}
 
 	msg := "{\"method\":\"ms.remote.control\",\"params\":{\"Cmd\":\"Click\",\"DataOfCmd\":\"KEY_POWER\",\"Option\":\"false\",\"TypeOfRemote\":\"SendRemoteKey\"}}"
-	err = c.WriteMessage(websocket.TextMessage, []byte(msg))
-	if err != nil {
+	if err := c.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		return err
 	}
 
 	time.Sleep(750 * time.Millisecond)
 
-	err = c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-	if err != nil {
+	if err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")); err != nil {
 		return err
 	}
 
