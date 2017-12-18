@@ -44,8 +44,7 @@ func main() {
 	})
 
 	go func() {
-		for {
-			time.Sleep(1 * time.Minute)
+		for _ = range time.NewTicker(1 * time.Minute).C {
 			acc.Switch.On.SetValue(state(*ip))
 		}
 	}()
