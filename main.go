@@ -17,6 +17,7 @@ import (
 )
 
 var (
+	command = flag.String("command", "start", "[start|on|off]")
 	db      = flag.String("db", "/usr/local/var/db/hksamsungtvremote", "Database path")
 	ip      = flag.String("ip", "", "TV IP address")
 	mac     = flag.String("mac", "", "TV MAC address")
@@ -39,6 +40,32 @@ func main() {
 		log.Info.Fatal("missing -mac")
 	}
 
+	switch *command {
+	case "start":
+		start(*mac, *ip)
+	case "on":
+		if err := wol(*mac); err != nil {
+			log.Debug.Println(err)
+			os.Exit(1)
+		}
+	case "off":
+		if err := power(*ip); err != nil {
+			log.Debug.Println(err)
+			os.Exit(1)
+		}
+	case "state":
+		if state(*ip) {
+			fmt.Println("on")
+		} else {
+			fmt.Println("off")
+		}
+	default:
+		flag.PrintDefaults()
+		os.Exit(2)
+	}
+}
+
+func start(macAddr string, ip string) {
 	info := accessory.Info{
 		Name:         "Samsung TV Remote",
 		Manufacturer: "Samsung",
@@ -48,24 +75,24 @@ func main() {
 	acc := accessory.NewSwitch(info)
 
 	acc.Switch.On.OnValueRemoteGet(func() bool {
-		return state(*ip)
+		return state(ip)
 	})
 
 	go func() {
 		for _ = range time.NewTicker(1 * time.Minute).C {
-			acc.Switch.On.SetValue(state(*ip))
+			acc.Switch.On.SetValue(state(ip))
 		}
 	}()
 
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			if err := wol(*mac); err != nil {
+			if err := wol(macAddr); err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
 			log.Info.Println("Turn off")
-			if err := power(*ip); err != nil {
+			if err := power(ip); err != nil {
 				log.Debug.Println(err)
 			}
 		}
