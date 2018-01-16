@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -124,7 +125,16 @@ func state(ip string) bool {
 }
 
 func powerOn(macAddr string, ip string) error {
-	return wol(macAddr, ip)
+	if err := wol(macAddr, ip); err != nil {
+		return err
+	}
+
+	time.Sleep(750 * time.Millisecond)
+	if state(ip) == false {
+		return errors.New("wol: timeout")
+	}
+
+	return nil
 }
 
 func powerOff(macAddr string, ip string) error {
