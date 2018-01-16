@@ -44,12 +44,12 @@ func main() {
 	case "start":
 		start(*mac, *ip)
 	case "on":
-		if err := wol(*mac, *ip); err != nil {
+		if err := powerOn(*mac, *ip); err != nil {
 			log.Debug.Println(err)
 			os.Exit(1)
 		}
 	case "off":
-		if err := power(*ip); err != nil {
+		if err := powerOff(*mac, *ip); err != nil {
 			log.Debug.Println(err)
 			os.Exit(1)
 		}
@@ -87,12 +87,12 @@ func start(macAddr string, ip string) {
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			if err := wol(macAddr, ip); err != nil {
+			if err := powerOn(macAddr, ip); err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
 			log.Info.Println("Turn off")
-			if err := power(ip); err != nil {
+			if err := powerOff(macAddr, ip); err != nil {
 				log.Debug.Println(err)
 			}
 		}
@@ -121,6 +121,14 @@ func state(ip string) bool {
 	}
 
 	return true
+}
+
+func powerOn(macAddr string, ip string) error {
+	return wol(macAddr, ip)
+}
+
+func powerOff(macAddr string, ip string) error {
+	return power(ip)
 }
 
 func wol(macAddr string, ip string) error {
