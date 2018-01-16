@@ -44,7 +44,7 @@ func main() {
 	case "start":
 		start(*mac, *ip)
 	case "on":
-		if err := wol(*mac); err != nil {
+		if err := wol(*mac, *ip); err != nil {
 			log.Debug.Println(err)
 			os.Exit(1)
 		}
@@ -87,7 +87,7 @@ func start(macAddr string, ip string) {
 	acc.Switch.On.OnValueRemoteUpdate(func(on bool) {
 		if on == true {
 			log.Info.Println("Turn on")
-			if err := wol(macAddr); err != nil {
+			if err := wol(macAddr, ip); err != nil {
 				log.Debug.Println(err)
 			}
 		} else {
@@ -123,7 +123,7 @@ func state(ip string) bool {
 	return true
 }
 
-func wol(macAddr string) error {
+func wol(macAddr string, ip string) error {
 	macBytes, err := hex.DecodeString(strings.Replace(macAddr, ":", "", -1))
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func wol(macAddr string) error {
 		b = append(b, macBytes...)
 	}
 
-	a, err := net.ResolveUDPAddr("udp", "255.255.255.255:9")
+	a, err := net.ResolveUDPAddr("udp", ip+":9")
 	if err != nil {
 		return err
 	}
