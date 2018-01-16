@@ -156,7 +156,11 @@ func wol(macAddr string) error {
 
 func power(ip string) error {
 	url := fmt.Sprintf("ws://%s:8001/api/v2/channels/samsung.remote.control?name=U2Ftc3VuZ1R2UmVtb3Rl", ip)
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
+	dialer := &websocket.Dialer{
+		HandshakeTimeout: 500 * time.Millisecond,
+	}
+	c, _, err := dialer.Dial(url, nil)
+
 	if err != nil {
 		return err
 	}
