@@ -125,7 +125,7 @@ func state(ip string) bool {
 }
 
 func powerOn(macAddr string, ip string) error {
-	if err := wol(macAddr, ip); err != nil {
+	if err := wol(macAddr); err != nil {
 		return err
 	}
 
@@ -141,7 +141,7 @@ func powerOff(macAddr string, ip string) error {
 	return power(ip)
 }
 
-func wol(macAddr string, ip string) error {
+func wol(macAddr string) error {
 	macBytes, err := hex.DecodeString(strings.Replace(macAddr, ":", "", -1))
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func wol(macAddr string, ip string) error {
 		b = append(b, macBytes...)
 	}
 
-	a, err := net.ResolveUDPAddr("udp", ip+":9")
+	a, err := net.ResolveUDPAddr("udp", "255.255.255.255:9")
 	if err != nil {
 		return err
 	}
